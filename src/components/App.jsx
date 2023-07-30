@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactLIst/ContactList';
 import { FilterContacts } from './Filter/Filter';
-
 export class App extends Component {
   state = {
     contacts: [],
@@ -40,6 +39,22 @@ export class App extends Component {
       name.toLowerCase().includes(filter.toLowerCase())
     );
   };
+
+  componentDidMount() {
+    const localStorageContacts = localStorage.getItem('contacts');
+    if (localStorageContacts !== null) {
+      this.setState({ contacts: JSON.parse(localStorageContacts) });
+      // console.log(JSON.parse(localStorageContacts));
+    }
+  }
+
+  componentDidUpdate(prevState) {
+    if (prevState.contacts !== this.state.contacts) {
+      const savedContacts = JSON.stringify(this.state.contacts);
+      localStorage.setItem('contacts', savedContacts);
+      // console.log(savedContacts);
+    }
+  }
 
   render() {
     return (

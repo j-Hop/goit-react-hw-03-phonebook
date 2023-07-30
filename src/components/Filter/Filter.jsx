@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import css from './Filter.module.css';
 
+
 export const FilterContacts = ({ value, onFilterInput }) => {
   return (
     <div className={css.filterContainer}>

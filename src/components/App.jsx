@@ -3,7 +3,7 @@ import bookContacts from '../data/bookContacts';
 import { nanoid } from 'nanoid';
 import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
-import { ContactList } from './ContactList/ContactList';
+import { ContactList } from './ContactLIst/ContactList';
 import PropTypes from 'prop-types';
 
 const contacts = bookContacts.contacts;

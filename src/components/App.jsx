@@ -1,77 +1,98 @@
-import React, { Component } from 'react';
+import React from 'react';
+import bookContacts from '../data/bookContacts';
 import { nanoid } from 'nanoid';
 import { ContactForm } from './ContactForm/ContactForm';
-import { ContactList } from './ContactLIst/ContactList';
-import { FilterContacts } from './Filter/Filter';
-export class App extends Component {
+import { Filter } from './Filter/Filter';
+import { ContactList } from './ContactList/ContactList';
+import PropTypes from 'prop-types';
+
+const contacts = bookContacts.contacts;
+
+export class App extends React.Component {
   state = {
-    contacts: [],
+    contacts,
     filter: '',
   };
 
-  addContact = data => {
-    const { contacts } = this.state;
-    const newContact = {
-      ...data,
+  componentDidMount() {
+    const contacts = localStorage.getItem('contacts');
+    const parsedContacts = JSON.parse(contacts);
+    if (parsedContacts) {
+      this.setState({ contacts: parsedContacts });
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (this.state.contacts !== prevState.contacts) {
+      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
+    }
+  }
+
+  onRemoveContact = contactId => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
+    }));
+  };
+
+  onAddContact = contactData => {
+    const comparison = this.state.contacts.find(
+      el => contactData.name.toLowerCase() === el.name.toLowerCase()
+    );
+
+    if (comparison) {
+      alert(`${contactData.name} is already in contacts!`);
+      return;
+    }
+    const contact = {
+      ...contactData,
       id: nanoid(),
     };
-
-    contacts.some(({ name }) => name === data.name)
-      ? alert(`${data.name} is already in contacts`)
-      : this.setState(prevState => ({
-          contacts: [...prevState.contacts, newContact],
-        }));
+    this.setState(prevState => ({
+      contacts: [...prevState.contacts, contact],
+    }));
   };
 
-  deleteContact = contactId => {
-    this.setState({
-      contacts: this.state.contacts.filter(contact => contact.id !== contactId),
-    });
+  changeFilter = e => {
+    this.setState({ filter: e.target.value });
   };
 
-  filterContact = event => {
-    this.setState({ filter: event.target.value });
-  };
-
-  filteredContactsList = () => {
+  getFilteredContacts = () => {
     const { contacts, filter } = this.state;
-    return contacts.filter(({ name }) =>
-      name.toLowerCase().includes(filter.toLowerCase())
+    return contacts.filter(
+      contact =>
+        contact.name.toLowerCase().includes(filter.toLowerCase()) ||
+        contact.number.toLowerCase().includes(filter.toLowerCase())
     );
   };
 
-  componentDidMount() {
-    const localStorageContacts = localStorage.getItem('contacts');
-    if (localStorageContacts !== null) {
-      this.setState({ contacts: JSON.parse(localStorageContacts) });
-      // console.log(JSON.parse(localStorageContacts));
-    }
-  }
-
-  componentDidUpdate(prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      const savedContacts = JSON.stringify(this.state.contacts);
-      localStorage.setItem('contacts', savedContacts);
-      // console.log(savedContacts);
-    }
-  }
-
   render() {
+    const { contacts, filter } = this.state;
+    const filteredContacts = this.getFilteredContacts();
     return (
       <>
         <h1>Phonebook</h1>
-        <ContactForm addContact={this.addContact} />
-
+        <ContactForm onAddContact={this.onAddContact} />
         <h2>Contacts</h2>
-        <FilterContacts
-          value={this.state.filter}
-          onFilterInput={this.filterContact}
-        />
-        <ContactList
-          contacts={this.filteredContactsList()}
-          onDeleteContact={this.deleteContact}
-        />
+        {contacts.length !== 0 && (
+          <Filter value={filter} onChange={this.changeFilter} />
+        )}
+        {contacts.length !== 0 && (
+          <ContactList
+            contacts={filteredContacts}
+            onRemoveContact={this.onRemoveContact}
+          />
+        )}
       </>
     );
   }
 }
+App.propTypes = {
+  contacts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      number: PropTypes.string.isRequired,
+    })
+  ),
+  filter: PropTypes.string,
+};
